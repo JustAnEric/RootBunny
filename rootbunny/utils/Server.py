@@ -12,6 +12,10 @@ class Server(Flask):
 
         @self.route('/', methods=['GET'])
         def index():
+            return render('splashscreen/index.html')
+        
+        @self.route('/main', methods=['GET'])
+        def main():
             return render('main/main.html')
         
     def start(self):

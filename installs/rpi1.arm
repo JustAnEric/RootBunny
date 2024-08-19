@@ -23,3 +23,5 @@ sudo systemctl daemon-reload
 sudo systemctl enable rootbunny-def-init.service
 
 echo "RootBunny has now done it's partial install. Please wait for the config tool to download and start..."
+
+python3 
