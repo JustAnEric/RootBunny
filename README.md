@@ -7,3 +7,6 @@ A tool that is used to modify the infotainment interface of any car.
 We are not responsible for any sort of modifications done to this tool and how it can be made to be distracting while driving.
 
 GitHub Pages documentation: https://justaneric.github.io/RootBunny
+
+Legal Items:
+🐇 [ [Disclaimer](https://justaneric.github.io/RootBunny/disclaimer) | [Terms of Service](https://justaneric.github.io/RootBunny/tos) ]
