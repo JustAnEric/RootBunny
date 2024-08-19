@@ -1,0 +1,25 @@
+#!/bin/bash
+## A script to install RootBunny's services and essentials as part of the Raspberry Pi system.
+### Only supported on Raspberry Pi OS.
+echo "<------------------------->";
+echo "Welcome to RootBunny Setup.";
+echo "This setup will install RootBunny's";
+echo "essential services and systems in";
+echo "order to operate. We ask you";
+echo "to give sudo permissions as part";
+echo "of the installation process.";
+echo "<------------------------->";
+echo "";
+echo "Installing RootBunny v2.1...";
+
+echo ":-= SERVICE =-: INSTALL early-xinit.service";
+sudo cp ./installs/content/early-xinit.service /etc/systemd/system/early-xinit.service;
+sudo systemctl daemon-reload
+sudo systemctl enable early-xinit.service
+
+echo ":-= SERVICE =-: INSTALL rootbunny-def-init.service";
+sudo cp ./installs/content/rootbunny-def-init.service /etc/systemd/system/rootbunny-def-init.service;
+sudo systemctl daemon-reload
+sudo systemctl enable rootbunny-def-init.service
+
+echo "RootBunny has now done it's partial install. Please wait for the config tool to download and start..."
