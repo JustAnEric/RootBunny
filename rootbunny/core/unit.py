@@ -7,9 +7,14 @@ class BunnyAPI:
         self.window = window
         print("BunnyAPI has been initialized.")
         
-    def get_sdk(self, version: str = None):
+    def get_sdk(self, version: str = None, info: dict = None):
         if version == 'sdk_admin':
-            return open('./rootbunny/utils/SDKAdmin.js').read()
+            content = open('./rootbunny/utils/SDKAdmin.js').read()
+            for key in info:
+                value = info[key]
+                if "/`"+key+"`/" in content:
+                    content = content.replace(f"/`{key}`/", str(value))
+            return content
         else:
             return open('./rootbunny/utils/SDK.js').read()
         
@@ -107,7 +112,7 @@ class Window:
                 self.render_state = True
                 self._no_sdk = True
                 self.load(self.file)
-                self.inject(self.API.get_sdk('sdk_admin'))
+                self.inject(self.API.get_sdk('sdk_admin', { '$START.bool': 'false' }))
                 print("Rendered.")
                 self._no_sdk = False
     
