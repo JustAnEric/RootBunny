@@ -14,6 +14,14 @@
             flex-direction: column;
         }
 
+        body.erroroccurred{
+            animation: lineargradanim ease infinite 12s;
+            background: linear-gradient(45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            height: 100vh;
+            overflow-y: hidden;
+        }
+
         .loader {
             width: 48px;
             height: 48px;
@@ -45,8 +53,23 @@
               100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
           }
 
-          small {
-            color: #777;
+          @keyframes lineargradanim {
+              0% {
+                background-position: 0% 50%;
+              }
+              50% {
+                background-position: 100% 50%;
+              }
+              100% {
+                background-position: 0% 50%;
+              }
+              /*0% { background: linear-gradient(#111, #333, #111);}
+              100% { background: linear-gradient(#333, #111, #333); }*/
+          }
+
+          small { color: #777; }
+
+          small,h1,p {
             font-family: Verdana, Geneva, Tahoma, sans-serif;
           }
     </style>
@@ -55,6 +78,6 @@
     <img src="/assets/splash/animations/RootBunny.gif" alt="">
     <span class="loader"></span>
     <small>Made by Eric with ❤️</small>
-    <script>setTimeout(()=>{window.location="/main";},2000);</script>
+    <script>setTimeout(()=>{if (window.rootbunny.scanbus) { if (window.rootbunny.scanbus.start == true) { window.location="/main"; } else { document.body.innerHTML = "<h1>Error loading RootBunny</h1><p>An unknown error has occurred. Please try again or debug the issue.</p>"; document.body.classList.add('erroroccurred'); } } else {document.body.innerHTML = "<h1>Error loading RootBunny</h1><p>An unknown error has occurred. Loading RootBunny took too long.</p>"; document.body.classList.add('erroroccurred');}},2000);</script>
 </body>
 </html>

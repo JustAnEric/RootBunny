@@ -9,48 +9,52 @@
 <body>
     <div class="status-bar">
         <span class="time">07:49</span>
-        <span class="battery">🔋 85%</span>
     </div>
 
     <div class="android-auto-home">
         <div class="app">
-            <img src="icons/navigation.png" alt="Navigation">
+            <img src="/assets/icons/navigation.png" alt="Navigation">
             <span>Navigation</span>
         </div>
         <div class="app">
-            <img src="icons/music.png" alt="Music">
+            <img src="/assets/icons/music.png" alt="Music">
             <span>Music</span>
         </div>
         <div class="app">
-            <img src="icons/phone.png" alt="Phone">
+            <img src="/assets/icons/phone.png" alt="Phone">
             <span>Phone</span>
         </div>
         <div class="app">
-            <img src="icons/messages.png" alt="Messages">
+            <img src="/assets/icons/messages.png" alt="Messages">
             <span>Messages</span>
         </div>
         <div class="app">
-            <img src="icons/settings.png" alt="Settings">
+            <img src="/assets/icons/settings.png" alt="Settings">
             <span>Settings</span>
         </div>
         <div class="app">
-            <img src="icons/weather.png" alt="Weather">
+            <img src="/assets/icons/weather.png" alt="Weather">
             <span>Weather</span>
         </div>
         <div class="app">
-            <img src="icons/calendar.png" alt="Calendar">
+            <img src="/assets/icons/calendar.png" alt="Calendar">
             <span>Calendar</span>
         </div>
         <div class="app">
-            <img src="icons/audiobooks.png" alt="Audiobooks">
+            <img src="/assets/icons/audiobooks.png" alt="Audiobooks">
             <span>Audiobooks</span>
+        </div>
+        <div class="app">
+            <img src="/assets/icons/spotify.png" alt="Spotify">
+            <span>Spotify</span>
         </div>
     </div>
     
     <div class="dock-bar">
-        <img src="images/home.png" alt="Home">
-        <img src="images/recent.png" alt="Recent">
-        <img src="images/voice.png" alt="Voice Assistant">
+        <img src="/assets/images/home.png" alt="Home">
+        <img src="/assets/images/recent.png" alt="Recent">
+        <img src="/assets/images/voice.png" alt="Voice Assistant">
     </div>    
+    <script>function addZero(num){if (num < 10) {return (num + "0");} return num;}; setInterval(()=>{let d=new Date();let h=addZero(d.getHours());let m=addZero(d.getMinutes());let s=addZero(d.getSeconds());document.querySelector('.time').innerHTML=h+':'+m+':'+s},1);</script>
 </body>
 </html>

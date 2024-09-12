@@ -36,3 +36,14 @@ class BaseExtension:
                 self.events['close'].append(func)
         return t_
         
+    def request_server_bindings(self, paths:list):
+        """
+Method to request access to server bindings: like a proxy\n
+This method is essential for extensions to use that have an app registered.\n
+Your Extension class needs to have a `proxy_route(...)` method implemented.
+        """
+        for i in paths:
+            for d in self.window.apps:
+                if d.get('name') == self.appid:
+                    d['path_selectors'].append(i)
+        return

@@ -6,6 +6,7 @@ from rootbunny.extensions.Extension import BaseExtension
 class Extension(BaseExtension):
     def __init__(self, window):
         super().__init__(window)
+        self.appid = "RootBunny"
         
     def start(self):
         print("Started core RootBunny extension")
