@@ -1,6 +1,6 @@
 from rootbunny.utils.Server import Server
 from rootbunny.utils.Audio.audio import Player as AudioPlayer
-import webview
+import webview, threading
 
 class BunnyAPI:
     """This is the Bunny API server, which handles requests from the client."""
@@ -91,6 +91,35 @@ class Window:
                     player.start()
 
                     self.registry[context][regkeyindex]['playerInstance'] = player
+                if event == "interface:apps/open":
+                    app_name : str = args[0]
+                    app_loaded : bool = False
+                    for app in self.apps:
+                        if str(app.get('name')) == str(app_name):
+                            self.window.load_url(f"{self.file}{app.get('path_selectors')[0]}") # the zeroth item in the path selectors list will be used as it is the entrypoint
+                            app_loaded = True
+                            if app.get('onOpen') and callable(app.get('onOpen')):
+                                threading.Thread(target=app.get('onOpen'), daemon=False).start()
+                            print(f"App '{app_name}' has been opened.")
+                            break
+                    if not app_loaded:
+                        print(f"App '{app_name} was not loaded: not found")
+                if event == "interface:apps/load/init":
+                    uri = self.window.get_current_url()
+                    app_path = uri.partition(self.url)[2]
+                    sent : bool = False
+                    for app in self.apps:
+                        # see which app has the path registered
+                        if app_path in app.get('path_selectors',[]):
+                            # we found the app, send init message
+                            cls = app.get('app')
+                            cls.init_sent(app_path)
+                            sent = True
+                            break
+                    if not sent:
+                        return False
+                    else:
+                        return True
                 pass
         
         """

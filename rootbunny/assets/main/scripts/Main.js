@@ -26,7 +26,7 @@ window.addEventListener('pywebviewready',()=>{
     apps.forEach(async(app)=>{
         if (app.getAttribute('title') == "Spotify") {
             app.addEventListener('click', ()=>{
-                pywebview.api.openApp(app.getAttribute('title'));
+                rootbunny.app.interface.load(app.getAttribute('title'));
             });
         }
     });

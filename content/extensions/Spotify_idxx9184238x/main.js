@@ -126,3 +126,8 @@ let songsTotal = 0;
         };
     });
 })();
+
+// RootBunny integration is below
+window.addEventListener('pywebviewready', async(e)=>{
+    rootbunny.app.interface.init();
+});
