@@ -8,6 +8,11 @@ body {
     align-items: center;
     justify-content: space-between;
     height: 100vh;
+    background: url(/default/wallpaper);
+    background-repeat: no-repeat;
+    background-size: cover;
+    overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 .status-bar {
@@ -28,6 +33,14 @@ body {
     justify-items: center;
     align-items: center;
     margin-top: 50px;
+    opacity: 0;
+    transform: translateY(100%);
+}
+
+.android-auto-home.pull {
+    animation: pullIn linear 0.25s;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .app {
@@ -65,6 +78,27 @@ body {
     padding: 10px;
     border-radius: 25px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pullIn {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    50% {
+        transform: translateY(50%);
+        opacity: 0.4;
+    }
+
+    90% {
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .time {

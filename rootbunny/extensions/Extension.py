@@ -40,7 +40,7 @@ class BaseExtension:
         """
 Method to request access to server bindings: like a proxy\n
 This method is essential for extensions to use that have an app registered.\n
-Your Extension class needs to have a `proxy_route(...)` method implemented.
+Your Extension class needs to have a `proxy_route(...)` method implemented to handle the requests.
         """
         for i in paths:
             for d in self.window.apps:

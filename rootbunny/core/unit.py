@@ -1,4 +1,5 @@
 from rootbunny.utils.Server import Server
+from rootbunny.utils.Audio.audio import Player as AudioPlayer
 import webview
 
 class BunnyAPI:
@@ -33,6 +34,65 @@ class App:
 
 class Window:
     def __init__(self) -> None:
+        class API:
+            def __init__(self):
+                print("API START")
+                
+            def on(s, event:str, *args):
+                if event == 'audio:player/open':
+                    context : str = args[0]
+                    url : str = args[1]
+                    functorunonaudiofinish : str = args[2]
+                    functorunonaudiotimeupdate : str = args[3]
+                    
+                    regkeyindex = None
+
+                    # add to audio registry
+                    if not (self.registry.get(context)):
+                        self.registry[context] = []
+
+                    self.registry[context].append({
+                        "volume": 100, # out of 100
+                        "playing": True,
+                        "playerInstance": None,
+                        "context": context,
+                        "info": { "mediaSession": {} }
+                    })
+                    regkeyindex = len(self.registry[context])-1
+                    
+                    player = AudioPlayer(self.window,url)
+                    
+                    @player.onFinish
+                    def onFinish():
+                        self.window.evaluate_js(f"{functorunonaudiofinish}();")
+                        del self.registry[context][regkeyindex] # unmount it from the registry
+                        #self.registry[context] = self.registry[context].slice((regkeyindex+1))
+                        print("Audio finished playing under context '"+context+"' and index "+regkeyindex.toString()+". Unmounted from registry.");
+                        print(self.registry[context])
+
+                        message = []
+                        if (self.registry[context]):
+                            for key in self.registry[context]:
+                                message.append({
+                                    "volume": key['volume'],
+                                    "playing": key['playing'],
+                                    "context": key['context'],
+                                    "info": key['info']
+                                }) #playerInstance is not available.
+
+                        self.window.evaluate_js(('audio.stateChange({"data": %s, "context": %*[]})' % (str(message))).replace('%*[]',str(context)))
+                        #return['audio:state_change', {'data': message, 'context': context}]
+                        
+                    @player.onTimeChange
+                    def onTimeUpdate(time, outof):
+                        self.window.evaluate_js(f"{functorunonaudiotimeupdate}({time}, {outof})")
+                        self.window.evaluate_js(('audio.timeChange({"data": %s, "context": %*[]})' % (str({"time": time, "outof": outof}))).replace('%*[]',str(context)))
+                        
+                    player.start()
+
+                    self.registry[context][regkeyindex]['playerInstance'] = player
+                pass
+        
         """
         Window constructor. This method constructs a new window and has a few methods that can be used for partial function content to extensions.
         """
@@ -47,7 +107,8 @@ class Window:
         self.window = webview.create_window(
             title = "Window",
             width = self.ProductionWH1[0],
-            height = self.ProductionWH1[1]
+            height = self.ProductionWH1[1],
+            js_api=API()
         )
         self.API = BunnyAPI(self.window)
         self.Server = Server(self)
@@ -62,6 +123,7 @@ class Window:
         }
         self.extensions = []
         self.apps = []
+        self.registry = {}
         
         self.closed = True
         self.render_state = False
@@ -112,7 +174,7 @@ class Window:
                 self.render_state = True
                 self._no_sdk = True
                 self.load(self.file)
-                self.inject(self.API.get_sdk('sdk_admin', { '$START.bool': 'false' }))
+                self.inject(self.API.get_sdk('sdk_admin', { '$START.bool': 'true' }))
                 print("Rendered.")
                 self._no_sdk = False
     
