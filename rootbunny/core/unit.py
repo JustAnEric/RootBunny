@@ -22,15 +22,17 @@ class BunnyAPI:
 class AppInfo:
     def __init__(self, info:dict):
         self.name = info.get('name', None)
+        self.icon = info.get('icon', None)
         self.version = info.get('version', None)
         
 class App:
-    def __init__(self, window:webview.Window, app:{dict}) -> None:
+    def __init__(self, window:webview.Window, app:dict) -> None:
         """App constructor. Initializes an application instance."""
         self.window = window
         self.app = app
         
         self.info = AppInfo(app)
+        self.enabled = app.get('enabled', True)
 
 class Window:
     def __init__(self) -> None:
@@ -64,10 +66,13 @@ class Window:
                     
                     @player.onFinish
                     def onFinish():
-                        self.window.evaluate_js(f"{functorunonaudiofinish}();")
-                        del self.registry[context][regkeyindex] # unmount it from the registry
+                        try:
+                            self.window.evaluate_js(f"{functorunonaudiofinish}();")
+                        except Exception as e:
+                            pass
+                        self.registry[context].pop(regkeyindex) # unmount it from the registry
                         #self.registry[context] = self.registry[context].slice((regkeyindex+1))
-                        print("Audio finished playing under context '"+context+"' and index "+regkeyindex.toString()+". Unmounted from registry.");
+                        print("Audio finished playing under context '"+str(context)+"' and index "+str(regkeyindex)+". Unmounted from registry.")
                         print(self.registry[context])
 
                         message = []
@@ -80,17 +85,217 @@ class Window:
                                     "info": key['info']
                                 }) #playerInstance is not available.
 
-                        self.window.evaluate_js(('audio.stateChange({"data": %s, "context": %*[]})' % (str(message))).replace('%*[]',str(context)))
+                        self.window.evaluate_js(('if (rootbunny.app.audio.stateChange) rootbunny.app.audio.stateChange({"data": %s, "context": "(*[]()"})' % (str(message))).replace('(*[]()',str(context)))
                         #return['audio:state_change', {'data': message, 'context': context}]
                         
                     @player.onTimeChange
                     def onTimeUpdate(time, outof):
-                        self.window.evaluate_js(f"{functorunonaudiotimeupdate}({time}, {outof})")
-                        self.window.evaluate_js(('audio.timeChange({"data": %s, "context": %*[]})' % (str({"time": time, "outof": outof}))).replace('%*[]',str(context)))
+                        try:
+                            self.window.evaluate_js(f"{functorunonaudiotimeupdate}({time}, {outof})")
+                        except Exception as e:
+                            pass
+                        self.window.evaluate_js(('if (rootbunny.app.audio.timeChange) rootbunny.app.audio.timeChange({"data": %s, "context": "(*[]()"})' % (str({"time": time, "outof": outof}))).replace('(*[]()',str(context)))
                         
                     player.start()
 
                     self.registry[context][regkeyindex]['playerInstance'] = player
+                    return {
+                        "status": "audioPlayerCreated",
+                        "index": regkeyindex,
+                        "context": context
+                    }
+                if event == "audio:player/getContext":
+                    context : str = args[0]
+                    if not self.registry.get(context):
+                        return []
+                    message = []
+                    if (self.registry[context]):
+                        for key in self.registry[context]:
+                            message.append({
+                                "volume": key['volume'],
+                                "playing": key['playing'],
+                                "context": key['context'],
+                                "info": key['info']
+                            })
+                    return message
+                if event == "audio:player/pauseAudio":
+                    context : str = args[0]
+                    key : int = args[1]
+                    if not self.registry.get(context):
+                        return False
+                    if not isinstance(key, int):
+                        if isinstance(key, str):
+                            try:
+                                # attempt conversion
+                                key = int(key)
+                            except: return False
+                        elif isinstance(key, float):
+                            key = int(key)
+                        else:
+                            return False
+                    if key > len(self.registry[context]) or key < 0:
+                        return False
+                    if self.registry[context][key].get('playerInstance'):
+                        self.registry[context][key]['playerInstance'].pause()
+                        return True
+                    else:
+                        return False
+                if event == "audio:player/resumeAudio":
+                    context : str = args[0]
+                    key : int = args[1]
+                    if not self.registry.get(context):
+                        return False
+                    if not isinstance(key, int):
+                        if isinstance(key, str):
+                            try:
+                                # attempt conversion
+                                key = int(key)
+                            except: return False
+                        elif isinstance(key, float):
+                            key = int(key)
+                        else:
+                            return False
+                    if key > len(self.registry[context]) or key < 0:
+                        return False
+                    if self.registry[context][key].get('playerInstance'):
+                        self.registry[context][key]['playerInstance'].resume()
+                        return True
+                    else:
+                        return False
+                if event == "audio:player/close":
+                    context : str = args[0]
+                    key : int = args[1]
+                    if not self.registry.get(context):
+                        return False
+                    if not isinstance(key, int):
+                        if isinstance(key, str):
+                            try:
+                                # attempt conversion
+                                key = int(key)
+                            except: return False
+                        elif isinstance(key, float):
+                            key = int(key)
+                        else:
+                            return False
+                    if key > len(self.registry[context]) or key < 0:
+                        return False
+                    self.registry[context][key]['playerInstance'].close()
+                    #self.registry[context].pop(key) # unmount it from the registry (stop the song completely)
+                    return True
+                if event == "audio:player/playBase64":
+                    context : str = args[0]
+                    b64 : str = args[1]
+                    codec : str = args[2]
+                    functorunonaudiofinish : str = args[3]
+                    functorunonaudiotimeupdate : str = args[4]
+                    
+                    regkeyindex = None
+
+                    # add to audio registry
+                    if not (self.registry.get(context)):
+                        self.registry[context] = []
+
+                    self.registry[context].append({
+                        "volume": 100, # out of 100
+                        "playing": True,
+                        "playerInstance": None,
+                        "context": context,
+                        "info": { "mediaSession": {} }
+                    })
+                    regkeyindex = len(self.registry[context])-1
+                    
+                    if '/' in codec:
+                        dataurl = f'data:{codec};base64,{b64}'
+                    else:
+                        dataurl = f'data:audio/{codec};base64,{b64}'
+                    
+                    player = AudioPlayer(self.window,dataurl)
+                    
+                    @player.onFinish
+                    def onFinish():
+                        try:
+                            self.window.evaluate_js(f"{functorunonaudiofinish}();")
+                        except Exception as e:
+                            pass
+                        self.registry[context].pop(regkeyindex) # unmount it from the registry
+                        #self.registry[context] = self.registry[context].slice((regkeyindex+1))
+                        print("Audio finished playing under context '"+str(context)+"' and index "+str(regkeyindex)+". Unmounted from registry.")
+                        print(self.registry[context])
+
+                        message = []
+                        if (self.registry[context]):
+                            for key in self.registry[context]:
+                                message.append({
+                                    "volume": key['volume'],
+                                    "playing": key['playing'],
+                                    "context": key['context'],
+                                    "info": key['info']
+                                }) #playerInstance is not available.
+
+                        self.window.evaluate_js(('if (rootbunny.app.audio.stateChange) rootbunny.app.audio.stateChange({"data": %s, "context": "(*[]()"})' % (str(message))).replace('(*[]()',str(context)))
+                        #return['audio:state_change', {'data': message, 'context': context}]
+                        
+                    @player.onTimeChange
+                    def onTimeUpdate(time, outof):
+                        try:
+                            self.window.evaluate_js(f"{functorunonaudiotimeupdate}({time}, {outof})")
+                        except Exception as e:
+                            pass
+                        self.window.evaluate_js(('if (rootbunny.app.audio.timeChange) rootbunny.app.audio.timeChange({"data": %s, "context": "(*[]()"})' % (str({"time": time, "outof": outof}))).replace('(*[]()',str(context)))
+                        
+                    player.start()
+
+                    self.registry[context][regkeyindex]['playerInstance'] = player
+                    return {
+                        "status": "audioPlayerCreated",
+                        "index": regkeyindex,
+                        "context": context
+                    }
+                if event == "audio:player/getInfo":
+                    context : str = args[0]
+                    key : int = args[1]
+                    if not self.registry.get(context):
+                        return None
+                    if not isinstance(key, int):
+                        if isinstance(key, str):
+                            try:
+                                # attempt conversion
+                                key = int(key)
+                            except: return None
+                        elif isinstance(key, float):
+                            key = int(key)
+                        else:
+                            return None
+                    if key > len(self.registry[context]) or key < 0:
+                        return None
+                    return self.registry[context][key]['info']
+                if event == "audio:player/setInfo":
+                    context : str = args[0]
+                    key : int = args[1]
+                    info : dict = args[2]
+                    if not self.registry.get(context):
+                        return False
+                    if not isinstance(key, int):
+                        if isinstance(key, str):
+                            try:
+                                # attempt conversion
+                                key = int(key)
+                            except: return False
+                        elif isinstance(key, float):
+                            key = int(key)
+                        else:
+                            return False
+                    if key > len(self.registry[context]) or key < 0:
+                        return False
+                    self.registry[context][key]['info'] = info
+                    return True
+                if event == "audio:player/queue":
+                    return {
+                        "status": "Planned for Future",
+                        "description": "This feature isn't fully implemented yet! Maybe, you could contribute and implement it for us?"
+                    }
+                if event == "interface:home":
+                    self.load(f"{self.file}/main")
                 if event == "interface:apps/open":
                     app_name : str = args[0]
                     app_loaded : bool = False
@@ -145,7 +350,7 @@ class Window:
         self.Server.start()
         
         self.url = "https://open.spotify.com"
-        self.file = "http://localhost:4000/"
+        self.file = "http://127.0.0.1:4000/"
         
         self.events = {
             "every_frame": []
@@ -181,10 +386,12 @@ class Window:
         """Loads the specified CSS on the current window."""
         self.window.load_css(css)
         
-    def register_app(self, name:str, version:float, extensionName:str, onOpen=None, onClose=None):
+    def register_app(self, name:str, version:float, extensionName:str, icon:str=None, onOpen=None, onClose=None, enabled=True):
         data = {
             "name": name,
             "version": version,
+            "icon": icon,
+            "enabled": enabled,
             "onOpen": onOpen,
             "onClose": onClose,
             "path_selectors": [],

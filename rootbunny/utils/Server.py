@@ -18,6 +18,15 @@ class Server(Flask):
         def main():
             return render('main/main.html')
         
+        @self.route('/main/app_data', methods=['GET'])
+        def main_appdata():
+            return {
+                "status": "success",
+                "apps": [
+                    { "name": a['name'], "icon": a['icon'], "version": a['version'], "enabled": a['enabled'] } for a in window.apps
+                ]
+            }
+        
         @self.route('/<path:path>', methods=['GET', 'POST'])
         def proxyroutehandler(path):
             print("Rendering proxy route handler under extension for /{}...".format(str(path)))

@@ -9,7 +9,7 @@ class Extension(BaseExtension):
         super().__init__(window)
         self.appid = "RootBunny"
         
-        self.window.register_app("RootBunny", "1.2.1", "RootBunny")
+        self.window.register_app("RootBunny", "1.2.3", "RootBunny", enabled=False)
         self.request_server_bindings([
             '/default/wallpaper'
         ])

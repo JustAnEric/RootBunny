@@ -5,8 +5,8 @@ class BaseExtension:
         events = {}
         ONLOAD_EVENT = 0
         ONCLOSE_EVENT = 1
-        DOM_EVENT = 2
-        RENDER_EVENT = 3
+        DOM_EVENT = 2 # DEPRECATED
+        RENDER_EVENT = 3 # DEPRECATED
         
         class RealEvent:
             def IsA(obj:object, event):

@@ -1,14 +1,29 @@
 import { Player } from './sdk/premify-player.js';
 let audId = 11;
 let songsTotal = 0;
+let debounce = false;
 
-(async()=>{
+const start = (async()=>{
     const player = new Player();
 
     songsTotal = parseInt((await(await(player.API.make_request('GET','songs/total',{},null))).json())['song_count']);
+    const getAudioState = await window.rootbunny.app.audio.getStates('premify-player');
+    console.log(getAudioState);
 
     //typically you'd want to load this with the song
-    player.load(audId);
+    if (getAudioState.length < 1) { // if there's no audio playing
+        player.load(audId);
+    } else if (getAudioState.length == 1) { // if there is audio playing, load it
+        const info = getAudioState[0].info.mediaSession;
+        audId = parseInt(info.metadata.songId);
+        player.renderAudioInfo(audId);
+        if (getAudioState[0].playing) {
+            const icon = document.querySelector('.play-pause-btn i');
+            if (icon.classList.contains('fa-play')) {
+                icon.classList.replace('fa-play', 'fa-pause');
+            }
+        }
+    }
 
     document.querySelector('.play-pause-btn').addEventListener('click', function() {
         const icon = this.querySelector('i');
@@ -42,69 +57,72 @@ let songsTotal = 0;
         }
     });
 
-    player.player.addEventListener('timeupdate', async(ev)=>{
-        const pgm = document.querySelector('.progress-bar.duration');
-        const pg = pgm.querySelector('.progress');
-        pg.style.width = `${(player.player.currentTime / player.player.duration)*100}%`;
+    /*player.player.addEventListener('timeupdate', async(ev)=>{
         //console.log(player.player.currentTime / player.player.duration*100);
-    });
+    });*/
 
-    player.player.addEventListener('ended', async(ev)=>{
+    player.run_on_finish = async () => {
+        if (debounce) return false;
         audId+=1;
-        player.pause();
+        debounce = true;
         player.load(audId).then(()=>{
-            player.play();
+            //player.play();
         });
-    });
+        debounce = false;
+    };
 
-    window.audio = player.player;
+    //window.audio = player.player;
 
     window.next = async()=>{
+        if (debounce) return false;
         if (audId >= songsTotal) {
             audId = 1;
-            player.pause();
-            player.load(audId).then(()=>{
-                player.play();
+            debounce = true;
+            await player.stop();
+            await player.load(audId).then(()=>{
+                //player.play();
             });
+            debounce = false;
         } else {
             audId+=1;
-            player.pause();
-            player.load(audId).then(()=>{
-                player.play();
+            debounce = true;
+            await player.stop()
+            await player.load(audId).then(()=>{
+                //player.play();
             });
+            debounce = false;
         }
     }
 
     window.previous = async()=>{
-        if (player.player.currentTime >= 3) {
+        /*if (player.player.currentTime >= 3) {
             player.player.currentTime = 0;
-        } else {
+        } else {*/
             if (audId <= 1) {
                 audId = songsTotal;
-                player.pause();
-                player.load(audId).then(()=>{
-                    player.play();
+                debounce = true;
+                await player.stop();
+                await player.load(audId).then(()=>{
+                    //player.play();
                 });
+                debounce = false;
             } else {
                 audId-=1;
-                player.pause();
-                player.load(audId).then(()=>{
-                    player.play();
+                debounce = true;
+                await player.stop();
+                await player.load(audId).then(()=>{
+                    //player.play();
                 });
+                debounce = false;
             }
-        }
+        //}
     }
 
-    document.querySelector('.top-nav input[type=text]').addEventListener('change',async()=>{
+    /*document.querySelector('.top-nav input[type=text]').addEventListener('change',async()=>{
         // make request
         const results = await ( await player.API.make_request('GET','songs/search',{'q':document.querySelector('.top-nav input[type=text]').value}) )
                             .json();
         console.log(results);
-
-        // 1st result is what we play
-        /*player.load(results[0].index).then(()=>{
-            player.play();
-        });*/
 
         const PLAYLIST_RESULT = `
 <div class="playlist-card">
@@ -124,10 +142,11 @@ let songsTotal = 0;
                 });
             });
         };
-    });
-})();
+    });*/
+});
 
 // RootBunny integration is below
-window.addEventListener('pywebviewready', async(e)=>{
+window.addEventListener('rootbunnyready', async(e)=>{
     rootbunny.app.interface.init();
+    await start();
 });

@@ -21,13 +21,30 @@ setTimeout(function(){
     document.querySelector('.android-auto-home').classList.add('pull');
 },5000);
 
-window.addEventListener('pywebviewready',()=>{
-    const apps = document.querySelectorAll('.android-auto-home .app');
+window.addEventListener('pywebviewready',async()=>{
+    const getapps = await fetch(`/main/app_data`).then(resp => resp.json());
+    const appList = document.querySelector('.android-auto-home');
+    for (const v of getapps.apps) {
+        if (!v.enabled) continue;
+        const app = document.createElement('div');
+        app.className = 'app';
+        app.title = v.name;
+        const appIcon = document.createElement('img');
+        appIcon.src = v.icon;
+        appIcon.alt = v.name;
+        const appName = document.createElement('span');
+        appName.innerText = v.name;
+        app.appendChild(appIcon);
+        app.appendChild(appName);
+        appList.appendChild(app);
+        app.addEventListener('click', ()=>{
+            rootbunny.app.interface.load(app.getAttribute('title'));
+        });
+    }
+    /*const apps = appList.querySelectorAll('.app');
     apps.forEach(async(app)=>{
         if (app.getAttribute('title') == "Spotify") {
-            app.addEventListener('click', ()=>{
-                rootbunny.app.interface.load(app.getAttribute('title'));
-            });
+            
         }
-    });
+    });*/
 });
